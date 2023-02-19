@@ -12,12 +12,18 @@ int is_file(const char *file_path){
     return S_ISREG(sstat.st_mode);
 }
 
-void _cat(char *file_read_name){
-    int file,n;
-    char data[100];
-    file=open(file_read_name,O_RDONLY);
-    while((n=read(file,data,100))>0){
-        write(1,data,n);
+void _cat(char **file_read_name, int i){    
+    int j;
+    for(j = 1;j<i;j++){
+       FILE *fp;
+       char buff[255];
+       fp = fopen(file_read_name[j], "r");
+
+        while(!feof(fp)){
+            char ch = fgetc(fp);
+            printf("%c", ch);
+        }
+        fclose(fp);
     }
 }
 
@@ -43,7 +49,8 @@ void _cp(char *file_read_name, char *file_write_name, int i){
 }
 
 void _rm(char **file_name, int i){
-    for(int j = 1;j<i;j++){
+    int j;
+    for(j = 1;j<i;j++){
         if(is_file(file_name[j]) == 1){
             if(remove(file_name[j]) == -1){
                 printf("rmdir: failed to remove %s: No such file or directory\n", file_name[j]);
@@ -55,7 +62,8 @@ void _rm(char **file_name, int i){
 }
 
 void _mkdir(char **file_name, int i){
-    for(int j = 1;j<i;j++){
+    int j;
+    for(j = 1;j<i;j++){
         if(mkdir(file_name[j], 0777) == -1){
             printf("mkdir: cannot create directory %s: File exists\n", file_name[j]);
         }
@@ -63,7 +71,8 @@ void _mkdir(char **file_name, int i){
 }
 
 void _rmdir(char **file_name, int i){
-    for(int j = 1;j<i;j++){
+    int j;
+    for(j = 1;j<i;j++){
         if(is_file(file_name[j]) == 0){
             if(remove(file_name[j]) == -1){
                 printf("rmdir: failed to remove %s: No such file or directory\n", file_name[j]);
@@ -90,13 +99,12 @@ void _echo(char *input, int hasOption){
 
 #define MAX 20
 
-
 int main(int argc, char *argv[]) {
 
     char token[5][7];
     char input[256];
     
-    //tokenizer variables
+    /*tokenizer variables*/
     char *p;
     char *A[MAX];
     int i;
@@ -120,8 +128,8 @@ int main(int argc, char *argv[]) {
 
         char *PS1 = strtok(input_copy, "=");
         if(strcmp(PS1, "PS1") == 0){
-            char *argument = strtok(NULL, ""); // get second token after "="
-            strcpy(init_prompt, strtok(argument, "\"")); // copy the argument to init_prompt
+            char *argument = strtok(NULL, ""); /*get second token after "="*/
+            strcpy(init_prompt, strtok(argument, "\"")); /*copy the argument to init_prompt*/
         }else{
             if(strcmp(A[0],"echo") == 0){
                 if(strcmp(A[1], "-n") == 0){
@@ -130,24 +138,20 @@ int main(int argc, char *argv[]) {
                     _echo(input_copy2, 0);
                 }
             }else if(strcmp(A[0],"cat") == 0){
-                _cat(A[1]); //test
+                _cat(A, i);
             }else if(strcmp(A[0],"cp") == 0){
-                _cp(A[1], A[2], i); // Complete -- U/V not fixed tho
+                _cp(A[1], A[2], i);
             }else if(strcmp(A[0],"rm") == 0){
-                _rm(A, i); // Complete
+                _rm(A, i);
             }else if(strcmp(A[0],"mkdir") == 0){
-                _mkdir(A, i); // Complete
+                _mkdir(A, i);
             }else if(strcmp(A[0],"rmdir") == 0){
-                _rmdir(A, i); // Complete
+                _rmdir(A, i);
             }else if(strcmp(A[0],"exit") == 0){
-                __exit(); // Complete?
+                __exit();
             }else{
-                printf("%s: command not found.\n", A[0]); //Complete
+                printf("%s: command not found.\n", A[0]);
             }
         }
     }
 }
-
-
-
-
