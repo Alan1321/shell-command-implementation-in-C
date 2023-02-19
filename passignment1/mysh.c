@@ -1,3 +1,10 @@
+/*
+Alan Subedi
+CS390 -- UNIX/LINUX , Spring 2023
+Date -- Feb 19th, 2023
+Task: Impleming basic shell command (without options) such as cat, rm, rmdir, mkdir, echo, PS1, exit, cp
+*/
+
 #include<stdio.h>
 #include<fcntl.h>
 #include<unistd.h>
@@ -6,12 +13,17 @@
 #include <stdlib.h>
 #include<string.h>
 
+/*The Function below determines if a given path is a file or not*/
 int is_file(const char *file_path){
     struct stat sstat;
     stat(file_path, &sstat);
     return S_ISREG(sstat.st_mode);
 }
 
+/*
+Implementation of cat command
+Read from a file using fopen and output data to screen
+*/
 void _cat(char **file_read_name, int i){    
     int j;
     for(j = 1;j<i;j++){
@@ -27,6 +39,12 @@ void _cat(char **file_read_name, int i){
     }
 }
 
+/*
+Implementation of cp command
+open input file, read data, 
+open outfile, write data to it
+close both files
+*/
 void _cp(char *file_read_name, char *file_write_name, int i){
     if(i == 1){
         printf("cp: missing file operand\n");
@@ -36,18 +54,28 @@ void _cp(char *file_read_name, char *file_write_name, int i){
         int fileread, n;
         char data[256];
         fileread = open(file_read_name, O_RDONLY);
-        FILE *fptr = fopen(file_write_name, "w");
-        while((n=read(fileread, data, 100))>0){
-            if(strcmp(data, "U") != 0 && strcmp(data, "V") != 0){
-                fprintf(fptr, "%s", data);
+        if(fileread == -1){
+            printf("cp: cannot stat '%s': No such file or directory\n", file_read_name);
+        }else{
+            FILE *fptr = fopen(file_write_name, "w");
+            while((n=read(fileread, data, 100))>0){
+                if(strcmp(data, "U") != 0 && strcmp(data, "V") != 0){
+                    fprintf(fptr, "%s", data);
+                }
             }
+            fclose(fptr);
         }
-        fclose(fptr);
+        close(fileread);
     }else{
         printf("Only 2 arguments allowed.");
     }
 }
 
+/*
+Implementation of rm command
+check if the path is file type
+if yes remove file
+*/
 void _rm(char **file_name, int i){
     int j;
     for(j = 1;j<i;j++){
@@ -61,6 +89,10 @@ void _rm(char **file_name, int i){
     }
 }
 
+/*
+Implementation of mkdir command
+uses mkdir() system call
+*/
 void _mkdir(char **file_name, int i){
     int j;
     for(j = 1;j<i;j++){
@@ -70,6 +102,11 @@ void _mkdir(char **file_name, int i){
     }
 }
 
+/*
+Implementation of rmdir command
+check if a given path is a directory
+if yes remove it using remove() call
+*/
 void _rmdir(char **file_name, int i){
     int j;
     for(j = 1;j<i;j++){
@@ -83,10 +120,15 @@ void _rmdir(char **file_name, int i){
     }
 }
 
+/*Implementation of exit call*/
 void __exit(){
     exit(0);
 }
 
+/*
+Implementation of echo command
+uses printf to print data to screen
+*/
 void _echo(char *input, int hasOption){
     char *value = strtok(input, "\"");
     char *value2 = strtok(NULL, "\"");
@@ -99,6 +141,7 @@ void _echo(char *input, int hasOption){
 
 #define MAX 20
 
+/*Main program when the program initially begins*/
 int main(int argc, char *argv[]) {
 
     char token[5][7];
@@ -111,12 +154,15 @@ int main(int argc, char *argv[]) {
     char init_prompt[256] = "$ ";
 
     while(1){
-        printf("%s", init_prompt);
-        scanf("%[^\n]%*c", input);
+        printf("%s", init_prompt);/*print the initial PS1*/
+        scanf("%[^\n]%*c", input);/*accept input commands*/
+        
+        /*make copies of input, will be used by echo and PS1*/
         char input_copy[256], input_copy2[256];
         strcpy(input_copy, input);
         strcpy(input_copy2, input);
 
+        /*splitting string to view all arguments properly*/
         p = strtok(input, " ");
         for(i = 0;p!=0 && i < MAX; ++i){
             A[i] = p;
@@ -126,12 +172,20 @@ int main(int argc, char *argv[]) {
 
         char combo_string[256];
 
+        /*tokenize for the PS1 command*/
         char *PS1 = strtok(input_copy, "=");
         if(strcmp(PS1, "PS1") == 0){
             char *argument = strtok(NULL, ""); /*get second token after "="*/
             strcpy(init_prompt, strtok(argument, "\"")); /*copy the argument to init_prompt*/
         }else{
+            /*call functions based on the input command*/
             if(strcmp(A[0],"echo") == 0){
+                /*if echo has no argument then just the newline is printed, same as the original shell*/
+                if(i == 1){
+                    printf("\n");
+                    continue;
+                }
+                /*option vs no option*/
                 if(strcmp(A[1], "-n") == 0){
                     _echo(input_copy2, 1);
                 }else{
