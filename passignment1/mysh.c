@@ -27,10 +27,16 @@ Read from a file using fopen and output data to screen
 void _cat(char **file_read_name, int i){    
     int j;
     for(j = 1;j<i;j++){
-       FILE *fp;
-       char buff[255];
-       fp = fopen(file_read_name[j], "r");
-
+        FILE *fp;
+        char buff[255];
+        int fileread;
+        fileread = open(file_read_name[j], O_RDONLY);
+        if(fileread == -1){
+            printf("cat: %s: No such file or directory\n", file_read_name[j]);
+            continue;
+        }
+        close(fileread);
+        fp = fopen(file_read_name[j], "r");
         while(!feof(fp)){
             char ch = fgetc(fp);
             printf("%c", ch);
