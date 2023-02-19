@@ -1,0 +1,40 @@
+// #include <stdio.h>
+// #include <sys/types.h>
+// #include <sys/stat.h>
+// #include <fcntl.h>
+
+// int main(){
+//     int n, fd;
+//     char buf[50];
+//     fd = open(".", O_RDONLY);
+//     n = read(fd, buf, 10);
+//     //fwrite(1, buf, 10);
+// }
+
+// //Used for basic input/output stream
+// #include <stdio.h>
+// //Used for handling directory files
+// #include <dirent.h>
+// //For EXIT codes and error handling
+// #include <errno.h>
+// #include <stdlib.h>
+// #include <string.h>
+
+// #include<stdio.h>
+
+// void ls(const char *dir)
+// {
+//     struct dirent *d;
+//     DIR *dh = opendir(dir);
+//     d = readdir(dh);
+//     printf("%s \n", d->d_name);
+// }
+
+// void cat(){
+
+// }
+
+// int main(){
+//     ls(".");
+// }
+

@@ -50,24 +50,79 @@ void __exit(){
     exit(0);
 }
 
-void __input(char *argv){
-    printf("%c\n", argv[0]);
+void _echo(char *input, int value){
+    if(value == 1){
+        //option added
+        printf("%s", input);
+    }else{
+        //option not added
+        printf("%s\n", input);
+    }
 }
 
 #define MAX 20
 
 int main(int argc, char *argv[]) {
-    // char string[50] = "Hello! We are learning about strtok";
-    // // Extract the first token
-    // char * token = strtok(string, " ");
-    // // loop through the string to extract all other tokens
-    // while( token != NULL ) {
-    //     printf( "%s\n", token ); //printing each token
-    //     token = strtok(NULL, " ");
-    // }
-    // return 0;
+    char token[5][7];
+    char input[256];
+    
+    //tokenizer variables
+    char *p;
+    char *A[MAX];
+    int i;
+    char init_prompt[256] = "$ ";
 
-    __input("hello world");
+    while(1){
+        printf("%s", init_prompt);
+        scanf("%[^\n]%*c", input);
+        char input_copy[256], input_copy2[256];
+        strcpy(input_copy, input);
+        strcpy(input_copy2, input);
+
+        p = strtok(input, " ");
+        for(i = 0;p!=0 && i < MAX; ++i){
+            A[i] = p;
+            p = strtok(0, " \t");
+        }
+        A[i] = 0;
+
+        char combo_string[256];
+
+        char *PS1 = strtok(input_copy, "=");
+        if(strcmp(PS1, "PS1") == 0){
+            char *argument = strtok(NULL, ""); // get second token after "="
+            strcpy(init_prompt, strtok(argument, "\"")); // copy the argument to init_prompt
+        }else{
+            if(strcmp(A[0],"echo") == 0){
+                if(strcmp(A[1], "-n") == 0){
+                    _echo(A[2], 1);
+                }else{
+                    _echo(A[1], 0);
+                }
+            }else if(strcmp(A[0],"cat") == 0){
+                _cat(A[1]);
+                //printf("The command was cat.\n");
+            }else if(strcmp(A[0],"cp") == 0){
+                _cp(A[1], A[2]);
+                //printf("The command was cp.\n");
+            }else if(strcmp(A[0],"rm") == 0){
+                _rm(A[1]);
+                //printf("The command was rm.\n");
+            }else if(strcmp(A[0],"mkdir") == 0){
+                _mkdir(A[1]);
+                //printf("The command was mkdir.\n");
+            }else if(strcmp(A[0],"rmdir") == 0){
+                _rmdir(A[1]);
+                //printf("The command was rmdir.\n");
+            }else if(strcmp(A[0],"exit") == 0){
+                __exit();
+                //printf("The command was exit.\n");
+            }else{
+                printf("%s: command not found.\n", A[0]);
+            }
+        }
+
+    }
 }
 
 
