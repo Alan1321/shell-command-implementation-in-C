@@ -6,6 +6,12 @@
 #include <stdlib.h>
 #include<string.h>
 
+int is_file(const char *file_path){
+    struct stat sstat;
+    stat(file_path, &sstat);
+    return S_ISREG(sstat.st_mode);
+}
+
 void _cat(char *file_read_name){
     int file,n;
     char data[100];
@@ -15,34 +21,56 @@ void _cat(char *file_read_name){
     }
 }
 
-void _cp(char *file_read_name, char *file_write_name){
-    int fileread, n;
-    char data[100];
-    fileread = open(file_read_name, O_RDONLY);
-    FILE *fptr = fopen(file_write_name, "w");
-    while((n=read(fileread, data, 100))>0){
-        fprintf(fptr, "%s", data);
+void _cp(char *file_read_name, char *file_write_name, int i){
+    if(i == 1){
+        printf("cp: missing file operand\n");
+    }else if(i == 2){
+        printf("cp: missing destination file operand after '%s'\n", file_read_name);
+    }else if(i == 3){
+        int fileread, n;
+        char data[256];
+        fileread = open(file_read_name, O_RDONLY);
+        FILE *fptr = fopen(file_write_name, "w");
+        while((n=read(fileread, data, 100))>0){
+            if(strcmp(data, "U") != 0 && strcmp(data, "V") != 0){
+                fprintf(fptr, "%s", data);
+            }
+        }
+        fclose(fptr);
+    }else{
+        printf("Only 2 arguments allowed.");
     }
 }
 
-void _rm(char *file_name){
-    int value = remove(file_name);
-    if(value == -1){
-        printf("rm: cannot remove %s: No such file or directory\n", file_name);
+void _rm(char **file_name, int i){
+    for(int j = 1;j<i;j++){
+        if(is_file(file_name[j]) == 1){
+            if(remove(file_name[j]) == -1){
+                printf("rmdir: failed to remove %s: No such file or directory\n", file_name[j]);
+            }
+        }else{
+            printf("rm: cannot remove '%s': Is a directory\n", file_name[j]);
+        }
     }
 }
 
-void _mkdir(char *dir_name){
-    int value = mkdir(dir_name, 0777);
-    if(value == -1){
-        printf("mkdir: cannot create directory %s: File exists\n", dir_name);
+void _mkdir(char **file_name, int i){
+    for(int j = 1;j<i;j++){
+        if(mkdir(file_name[j], 0777) == -1){
+            printf("mkdir: cannot create directory %s: File exists\n", file_name[j]);
+        }
     }
 }
 
-void _rmdir(char *dir_name){
-    int value = remove(dir_name);
-    if(value == -1){
-        printf("rmdir: failed to remove %s: No such file or directory\n", dir_name);
+void _rmdir(char **file_name, int i){
+    for(int j = 1;j<i;j++){
+        if(is_file(file_name[j]) == 0){
+            if(remove(file_name[j]) == -1){
+                printf("rmdir: failed to remove %s: No such file or directory\n", file_name[j]);
+            }
+        }else{
+            printf("rm: cannot remove '%s': Is a file\n", file_name[j]);
+        }
     }
 }
 
@@ -50,19 +78,21 @@ void __exit(){
     exit(0);
 }
 
-void _echo(char *input, int value){
-    if(value == 1){
-        //option added
-        printf("%s", input);
+void _echo(char *input, int hasOption){
+    char *value = strtok(input, "\"");
+    char *value2 = strtok(NULL, "\"");
+    if(hasOption == 1){
+        printf("%s", value2);
     }else{
-        //option not added
-        printf("%s\n", input);
+        printf("%s\n", value2);
     }
 }
 
 #define MAX 20
 
+
 int main(int argc, char *argv[]) {
+
     char token[5][7];
     char input[256];
     
@@ -95,33 +125,26 @@ int main(int argc, char *argv[]) {
         }else{
             if(strcmp(A[0],"echo") == 0){
                 if(strcmp(A[1], "-n") == 0){
-                    _echo(A[2], 1);
+                    _echo(input_copy2, 1);
                 }else{
-                    _echo(A[1], 0);
+                    _echo(input_copy2, 0);
                 }
             }else if(strcmp(A[0],"cat") == 0){
-                _cat(A[1]);
-                //printf("The command was cat.\n");
+                _cat(A[1]); //test
             }else if(strcmp(A[0],"cp") == 0){
-                _cp(A[1], A[2]);
-                //printf("The command was cp.\n");
+                _cp(A[1], A[2], i); // Complete -- U/V not fixed tho
             }else if(strcmp(A[0],"rm") == 0){
-                _rm(A[1]);
-                //printf("The command was rm.\n");
+                _rm(A, i); // Complete
             }else if(strcmp(A[0],"mkdir") == 0){
-                _mkdir(A[1]);
-                //printf("The command was mkdir.\n");
+                _mkdir(A, i); // Complete
             }else if(strcmp(A[0],"rmdir") == 0){
-                _rmdir(A[1]);
-                //printf("The command was rmdir.\n");
+                _rmdir(A, i); // Complete
             }else if(strcmp(A[0],"exit") == 0){
-                __exit();
-                //printf("The command was exit.\n");
+                __exit(); // Complete?
             }else{
-                printf("%s: command not found.\n", A[0]);
+                printf("%s: command not found.\n", A[0]); //Complete
             }
         }
-
     }
 }
 
