@@ -147,9 +147,11 @@ void __exit(){
 /*
 Implementation of echo command
 uses printf to print data to screen
+--No longer used. Found a Bug so Implemented directly on main --> last minute resort
 */
 void _echo(char *input, int hasOption){
     char *value = strtok(input, "\"");
+    printf("%s\n", value);
     char *value2 = strtok(NULL, "\"");
     if(hasOption == 1){
         printf("%s", value2);
@@ -204,11 +206,18 @@ int main(int argc, char *argv[]) {
                     printf("\n");
                     continue;
                 }
-                /*option vs no option*/
+                int j;
                 if(strcmp(A[1], "-n") == 0){
-                    _echo(input_copy2, 1);
+                    j = 2;
                 }else{
-                    _echo(input_copy2, 0);
+                    j = 1;
+                }
+                for(j;j<i;j++){
+                    printf("%s ", A[j]);
+                }
+                if(strcmp(A[1], "-n") == 0){
+                }else{
+                    printf("\n");
                 }
             }else if(strcmp(A[0],"cat") == 0){
                 _cat(A, i);
