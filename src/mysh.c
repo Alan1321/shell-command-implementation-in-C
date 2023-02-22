@@ -12,12 +12,13 @@ Task: Impleming basic shell command (without options) such as cat, rm, rmdir, mk
 #include<sys/types.h>
 #include <stdlib.h>
 #include<string.h>
+#include <errno.h>
 
 /*The Function below determines if a given path is a file or not*/
-int is_file(const char *file_path){
-    struct stat sstat;
-    stat(file_path, &sstat);
-    return S_ISREG(sstat.st_mode);
+int is_file(char *file_path){
+    struct stat sb;
+    stat(file_path, &sb);
+    return S_ISREG(sb.st_mode);
 }
 
 /*
@@ -25,23 +26,27 @@ Implementation of cat command
 Read from a file using fopen and output data to screen
 */
 void _cat(char **file_read_name, int i){    
-    int j;
-    for(j = 1;j<i;j++){
-        FILE *fp;
-        char buff[255];
-        int fileread;
-        fileread = open(file_read_name[j], O_RDONLY);
-        if(fileread == -1){
-            printf("cat: %s: No such file or directory\n", file_read_name[j]);
-            continue;
+    if(i == 1){
+        printf("cp: missing file operand\n");
+    }else{
+        int j;
+        for(j = 1;j<i;j++){
+            FILE *fp;
+            char buff[255];
+            int fileread;
+            fileread = open(file_read_name[j], O_RDONLY);
+            if(fileread == -1){
+                printf("cat: %s: No such file or directory\n", file_read_name[j]);
+                continue;
+            }
+            close(fileread);
+            fp = fopen(file_read_name[j], "r");
+            while(!feof(fp)){
+                char ch = fgetc(fp);
+                printf("%c", ch);
+            }
+            fclose(fp);
         }
-        close(fileread);
-        fp = fopen(file_read_name[j], "r");
-        while(!feof(fp)){
-            char ch = fgetc(fp);
-            printf("%c", ch);
-        }
-        fclose(fp);
     }
 }
 
@@ -57,14 +62,14 @@ void _cp(char *file_read_name, char *file_write_name, int i){
     }else if(i == 2){
         printf("cp: missing destination file operand after '%s'\n", file_read_name);
     }else if(i == 3){
-        int fileread, n;
+        int fileread;
         char data[256];
         fileread = open(file_read_name, O_RDONLY);
         if(fileread == -1){
             printf("cp: cannot stat '%s': No such file or directory\n", file_read_name);
         }else{
             FILE *fptr = fopen(file_write_name, "w");
-            while((n=read(fileread, data, 100))>0){
+            while(read(fileread, data, 255)>0){
                 if(strcmp(data, "U") != 0 && strcmp(data, "V") != 0){
                     fprintf(fptr, "%s", data);
                 }
@@ -83,14 +88,18 @@ check if the path is file type
 if yes remove file
 */
 void _rm(char **file_name, int i){
-    int j;
-    for(j = 1;j<i;j++){
-        if(is_file(file_name[j]) == 1){
-            if(remove(file_name[j]) == -1){
-                printf("rmdir: failed to remove %s: No such file or directory\n", file_name[j]);
+    if(i == 1){
+        printf("cp: missing file operand\n");
+    }else{
+        int j;
+        for(j = 1;j<i;j++){
+            if(is_file(file_name[j]) == 1){
+                if(remove(file_name[j]) == -1){
+                    printf("rmdir: failed to remove %s: No such file or directory\n", file_name[j]);
+                }
+            }else{
+                printf("rm: cannot remove '%s': Is a directory\n", file_name[j]);
             }
-        }else{
-            printf("rm: cannot remove '%s': Is a directory\n", file_name[j]);
         }
     }
 }
@@ -100,10 +109,14 @@ Implementation of mkdir command
 uses mkdir() system call
 */
 void _mkdir(char **file_name, int i){
-    int j;
-    for(j = 1;j<i;j++){
-        if(mkdir(file_name[j], 0777) == -1){
-            printf("mkdir: cannot create directory %s: File exists\n", file_name[j]);
+    if(i == 1){
+        printf("cp: missing file operand\n");
+    }else{        
+        int j;
+        for(j = 1;j<i;j++){
+            if(mkdir(file_name[j], 0777) == -1){
+                printf("mkdir: cannot create directory %s: %s\n", file_name[j], strerror(errno));
+            }
         }
     }
 }
@@ -114,14 +127,14 @@ check if a given path is a directory
 if yes remove it using remove() call
 */
 void _rmdir(char **file_name, int i){
-    int j;
-    for(j = 1;j<i;j++){
-        if(is_file(file_name[j]) == 0){
-            if(remove(file_name[j]) == -1){
-                printf("rmdir: failed to remove %s: No such file or directory\n", file_name[j]);
+    if(i == 1){
+        printf("cp: missing file operand\n");
+    }else{
+        int j;
+        for(j = 1;j<i;j++){
+            if(rmdir(file_name[j]) == -1){
+                printf("rmdir: failed to remove '%s': %s\n", file_name[j], strerror(errno));
             }
-        }else{
-            printf("rm: cannot remove '%s': Is a file\n", file_name[j]);
         }
     }
 }
